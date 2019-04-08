@@ -1,0 +1,9 @@
+# PTF Settings
+
+haswater false
+waterdepth 120.0 cm
+r3600hasacrylic true
+r3600glassthickness 3.0 mm
+r3600cathodethickness 50.0 nm
+r3600acrylicthickness 15.0 mm
+

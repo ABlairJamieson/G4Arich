@@ -1,0 +1,22 @@
+# Example use of gps to send beam of optical photons
+
+/OpNovice/gun/optSource gps
+/gps/verbose 2
+/gps/particle pi+
+/gps/polarization 0 0 1
+/gps/number 1
+/gps/time 0 ns
+
+/gps/ene/type Mono
+/gps/energy 8.0 GeV
+
+/gps/pos/type Point
+/gps/pos/centre 0. 0. -50. cm
+
+
+/gps/ang/type iso
+/gps/ang/rot1 0.0 1.0 0.0
+/gps/ang/rot2 1.0 0.0 0.0
+/gps/ang/mintheta 0.0 mrad
+/gps/ang/maxtheta 380.5 mrad
+/run/beamOn 1

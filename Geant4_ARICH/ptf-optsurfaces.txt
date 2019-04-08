@@ -1,0 +1,51 @@
+# PTF Optical Surface Settings
+
+
+# blacksheet reflectivity scaling factor
+blacksheet_BSRFF 1.0
+
+# note diffuse refl prob. is D = 1 - CSL - CSS - CBS
+# blacksheet specular scatter fraction (about average surface)
+blacksheet_CSS   0.2
+# blacksheet specular lobe fraction (following width sigma_alpha in rad)
+blacksheet_CSL   0.3
+# blacksheet sigma alpha of facets in radians
+blacksheet_sigmaalpha 0.15
+# blacksheet backscatter fraction
+blacksheet_CBS   0.2
+
+
+# cathode reflection fractions and roughness
+cathode_CSS 0.7
+cathode_CSL 0.2
+cathode_CBS 0.0
+cathode_sigmaalpha 0.314
+
+# pmt glass reflection fractions and roughness
+pmtglass_CSL 0.98
+pmtglass_CSS 0.02
+pmtglass_CBS 0.00
+pmtglass_sigmaalpha 0.03
+
+# acrylic reflection fractions and roughness
+acrylic_CSS 0.7
+acrylic_CSL 0.2
+acrylic_CBS 0.02
+acrylic_sigmaalpha 0.314
+
+
+# water reflection fractions and roughness
+water_CSS 0.01
+water_CSL 0.99
+water_CBS 0.00
+water_sigmaalpha 0.001
+
+# reflector
+reflector_reflectivity 0.95
+
+# pmt steel reflectivity
+pmtsteel_reflectivity 0.8
+
+
+
+

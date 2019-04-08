@@ -1,0 +1,11 @@
+/control/verbose 0
+/tracking/verbose 0
+#
+/gun/particle opticalphoton
+/gun/energy 3 eV
+#
+/gun/direction 0 0.0 -1.0
+/gun/position 10 0 10 cm
+/run/printProgress 0
+/gun/polarization 0 0 1
+/run/beamOn 100

@@ -1,0 +1,15 @@
+# Tunable parameters for the materials in the PTF
+
+# Water absorption length tuning factor
+water_ABWFF 1.0
+
+# Water Rayleigh scattering length tuning factor
+water_RAYFF 0.625
+
+# Cathode absorption length tuning factor
+cathode_ABWFF 6.0
+
+# Glass absorption length tuning factor
+glass_ABWFF 1.0
+
+
