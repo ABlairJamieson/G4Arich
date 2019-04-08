@@ -1,0 +1,2 @@
+hasmirror true
+mirrorlength 80.0 mm
