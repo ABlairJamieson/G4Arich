@@ -1,4 +1,4 @@
-# Example use of gps to send beam of optical photons
+# Example use of gps to send beam of muons
 
 /process/activate OpRayleigh opticalphoton
 
