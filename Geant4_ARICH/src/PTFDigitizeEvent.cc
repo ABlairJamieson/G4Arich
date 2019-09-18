@@ -108,9 +108,9 @@ void PTFDigitizeEvent::FillTruthTracks( const G4Event * anEvent ){
     }
   }
 
-   std::cout<<"G4ArichEventAction::FillTree -- "
-  	   <<" NTracks = "<<hman->truth->NTracks
-  	   <<std::endl;
+  //std::cout<<"G4ArichEventAction::FillTree -- "
+  //	   <<" NTracks = "<<hman->truth->NTracks
+  //	   <<std::endl;
 
   hman->truth_tree->Fill();
 }
@@ -185,10 +185,10 @@ void PTFDigitizeEvent::DigitizeEvent( const G4Event* evt ){
     
   }
 
-   std::cout<<"PTFDigitizeEvent::FillTree -- "
-  	   <<" Nphotons = "<<hman->ptf->NPhotons
-  	   <<" NPMT = "<<hman->ptf->NPMT
-  	   <<std::endl;
+  //  std::cout<<"PTFDigitizeEvent::FillTree -- "
+  // 	   <<" Nphotons = "<<hman->ptf->NPhotons
+  // 	   <<" NPMT = "<<hman->ptf->NPMT
+  // 	   <<std::endl;
   
   hman->ptf_tree->Fill();
   return;

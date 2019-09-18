@@ -1,2 +1,2 @@
 hasmirror true
-mirrorlength 80.0 mm
+mirrorlength 250.0 mm

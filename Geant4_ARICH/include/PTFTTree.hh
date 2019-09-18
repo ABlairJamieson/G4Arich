@@ -28,6 +28,9 @@ struct PTFTTree {
   float true_t[MAXQ];         //<[NPhotons] truth time of photon (ns)
   float true_e[MAXQ];         //<[NPhotons] truth photon energy (eV)
   float true_ini_z[MAXQ];     //<[NPhotons] truth initial z position
+  int   root_eventid;         //< if generated from root input, event id of root event
+  ULong64_t root_idx; //< if generated from root input, index into files
+  
 
   const char * GetRootString(){
     if (rootstring != "" ) return rootstring.c_str();
@@ -48,6 +51,9 @@ struct PTFTTree {
     rootstring+=":true_t[NPhotons]/F";
     rootstring+=":true_e[NPhotons]/F";
     rootstring+=":true_ini_z[NPhotons]/F";
+    rootstring+=":root_eventid/I";
+    rootstring+=":root_idx/l";
+
     return rootstring.c_str(); 
   }
 
@@ -69,6 +75,8 @@ struct PTFTTree {
     t->Branch( "true_t", true_t, "true_t[NPhotons]/F" );
     t->Branch( "true_e", true_e, "true_e[NPhotons]/F" );
     t->Branch( "true_ini_z", true_ini_z, "true_ini_z[NPhotons]/F" );
+    t->Branch( "root_eventid", &root_eventid, "root_eventid/I" );
+    t->Branch( "true_idx", &root_idx, "root_idx/l" );
     return;
   }
 
@@ -91,6 +99,8 @@ struct PTFTTree {
     t->SetBranchAddress( "true_t", true_t );
     t->SetBranchAddress( "true_e", true_e );
     t->SetBranchAddress( "true_ini_z", true_ini_z );
+    t->SetBranchAddress( "root_eventid", &root_eventid );
+    t->SetBranchAddress( "root_idx", &root_idx );
     return;
   }
   
@@ -120,6 +130,8 @@ struct PTFTTree {
       true_e[i]=-9999.0;
       true_ini_z[i]=-9999.0;
     }
+    root_eventid = 0;
+    root_idx = 0;
   }
 
 private:

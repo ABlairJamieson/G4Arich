@@ -22,7 +22,7 @@ G4ArichPrimaryGeneratorMessenger::
   fGunDir->SetGuidance("PrimaryGenerator control");
 
   fSourceCmd = new G4UIcmdWithAString("/G4Arich/gun/optSource",this);
-  fSourceCmd->SetGuidance("Set source type to either gun or gps");
+  fSourceCmd->SetGuidance("Set source type to either gun, gps, or root");
   fSourceCmd->SetDefaultValue("gun");
   
   fPolarCmd =
@@ -51,7 +51,7 @@ void G4ArichPrimaryGeneratorMessenger::SetNewValue(
                                         G4UIcommand* command, G4String newValue)
 {
   if ( command == fSourceCmd ){
-    if ( newValue == "gps" || newValue == "gun" ) {
+    if ( newValue == "gps" || newValue == "gun" || newValue == "root" ) {
       fG4ArichAction->SetSourceType( newValue );
     } else {
       std::cout<<"G4ArichPrimaryGeneratorMessenger::SetNewValue "

@@ -1,0 +1,9 @@
+# Example use of gps to send beam of optical photons
+
+#/vis/open OGL 600x600-0+0
+
+/process/activate OpRayleigh opticalphoton
+
+/G4Arich/gun/optSource root
+
+/run/beamOn 1
