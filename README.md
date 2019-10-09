@@ -17,6 +17,13 @@ mirrorlength 80.0 mm
 
 Additional settings should be added there to do further studies.
 
+An analysis of the output data is in the directory analysis/. To build the analysis code:
+
+> cd analysis
+> make
+
+The analysis code needs root, so you will have to have the environment set up by running thisroot.sh (from your root installation).
+
 
 
 
