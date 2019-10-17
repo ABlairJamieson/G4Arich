@@ -1,5 +1,5 @@
 /// PTFTTree.hh
-/// Class defining variable to put into an output tree for PTF simulation.
+/// Class defining variable to put into an output tree for ARICH simulation.
 /// \author {Blair Jamieson} \date{ July 2018 }
 /// Modifications:
 ///   Oct. 2018  Andrew Sikora   Add starting position of photon and primary particle initial position, direction, energy
@@ -13,7 +13,7 @@ const int MAXQ = 1000000; //< maximum number of photons stored in TTree
 struct PTFTTree {
   int   EventNum;             //< Event number
   int   NPMT;                 //< Number of PMTs digitized
-  float pmtid[MAXPMT];        //<[NPMT] PMT number 
+  int   pmtid[MAXPMT];        //<[NPMT] PMT number 
   float dig_T[MAXPMT];        //<[NPMT] Digitizer Time (ns)
   int   dig_Q[MAXPMT];        //<[NPMT] Digitizer Number of photons
   int   NPhotons;             //< truth Number of photons 
@@ -29,7 +29,7 @@ struct PTFTTree {
   float true_e[MAXQ];         //<[NPhotons] truth photon energy (eV)
   float true_ini_z[MAXQ];     //<[NPhotons] truth initial z position
   int   root_eventid;         //< if generated from root input, event id of root event
-  ULong64_t root_idx; //< if generated from root input, index into files
+  ULong64_t true_idx; //< if generated from root input, index into files
   
 
   const char * GetRootString(){
@@ -52,7 +52,7 @@ struct PTFTTree {
     rootstring+=":true_e[NPhotons]/F";
     rootstring+=":true_ini_z[NPhotons]/F";
     rootstring+=":root_eventid/I";
-    rootstring+=":root_idx/l";
+    rootstring+=":true_idx/l";
 
     return rootstring.c_str(); 
   }
@@ -76,7 +76,7 @@ struct PTFTTree {
     t->Branch( "true_e", true_e, "true_e[NPhotons]/F" );
     t->Branch( "true_ini_z", true_ini_z, "true_ini_z[NPhotons]/F" );
     t->Branch( "root_eventid", &root_eventid, "root_eventid/I" );
-    t->Branch( "true_idx", &root_idx, "root_idx/l" );
+    t->Branch( "true_idx", &true_idx, "true_idx/l" );
     return;
   }
 
@@ -100,7 +100,7 @@ struct PTFTTree {
     t->SetBranchAddress( "true_e", true_e );
     t->SetBranchAddress( "true_ini_z", true_ini_z );
     t->SetBranchAddress( "root_eventid", &root_eventid );
-    t->SetBranchAddress( "root_idx", &root_idx );
+    t->SetBranchAddress( "true_idx", &true_idx );
     return;
   }
   
@@ -131,7 +131,7 @@ struct PTFTTree {
       true_ini_z[i]=-9999.0;
     }
     root_eventid = 0;
-    root_idx = 0;
+    true_idx = 0;
   }
 
 private:

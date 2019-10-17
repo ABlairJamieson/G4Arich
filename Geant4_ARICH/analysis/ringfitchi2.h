@@ -17,7 +17,7 @@ const double one_over_sigma2 = (12.0/36.0); // for  1/ ( (6mm)^2 / 12 )
 // ring fit chi2 functor
 struct ringfitchi2 {  
   // xypoints assumed to be in mm
-  ringfitchi2( std::vector< xypoint > p ) : xy( p ){ }
+  ringfitchi2( const std::vector< xypoint >& p ) : xy( p ){ }
 
   // function to calculate the chi2
   // pars[0] = b (short radius) (mm)
@@ -27,6 +27,9 @@ struct ringfitchi2 {
   // pars[4] = center y (mm)
   double operator()( const double * pars); 
 
+  // set points
+  void set_points( const std::vector< xypoint >& p ) { xy = p; }
+  
 private:
   std::vector< xypoint > xy;
 };

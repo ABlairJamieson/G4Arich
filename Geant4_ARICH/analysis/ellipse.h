@@ -3,18 +3,13 @@
 
 #include <iostream>
 #include <cmath>
+#include "xypoint.h"
 
 using std::ostream;
 using std::acos;
 
 const double pi = acos(-1.);
 
-struct xypoint{
-  double x;
-  double y;
-  xypoint( double xx, double yy ) : x(xx), y(yy) { }; 
-  xypoint() :x(0), y(0) { };
-};
 
 struct ellipse_st {
   // define an ellipse by:
