@@ -86,7 +86,7 @@ const HoughResults& CircleHough::find_circles( const std::vector< xypoint >& dat
       done = true;
     }
     fresults.push_back( hr );
-    save_hough_histo( fresults.size(), fTransformed[ hr.rbin ] );
+    //save_hough_histo( fresults.size(), fTransformed[ hr.rbin ] );
     //plot_candidate( fresults.size(), hr );
   }
 

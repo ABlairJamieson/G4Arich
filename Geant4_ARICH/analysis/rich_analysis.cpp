@@ -84,10 +84,12 @@ void new_event_display( const unsigned long long iev,
     
     // Add datapoints as boxes to the plot
     for ( const xypoint & pt : hcr[iel].data ){
-      TBox * b = new TBox( pt.x-xbwid, pt.y-ybwid, pt.x+xbwid, pt.y+ybwid );
+      TBox *b =new TBox( pt.x-xbwid, pt.y-ybwid, pt.x+xbwid, pt.y+ybwid );
       b->SetFillStyle(1001);
       b->SetFillColor( curcol );
       b->Draw();
+      b->SetBit( kCanDelete );
+      b->SetBit( kMustCleanup );
     }
     if ( hcr[iel].type == HoughUnusedPoints ) continue;
     
@@ -144,12 +146,12 @@ void rich_analysis( char * infilename = "geant4ptf_000000.root", unsigned long l
 
   // Setup ouput file for ring fit results
   TFile * fout = new TFile( "rich_analysis.root", "recreate" );
+  fout->cd();
 
   /// create results TTree
   TTree* ttfits = new TTree("ellipsefits","ellipsefits");
   EllipseFitter elfit;
   elfit.MakeTTreeBranches( ttfits );
-  ttfits->SetAutoSave();
   
   /// Setup hough transform class 
   CircleHough hc;
@@ -199,6 +201,8 @@ void rich_analysis( char * infilename = "geant4ptf_000000.root", unsigned long l
     /// Save results to TTree
     ttfits->Fill();
 
+    if ( iev%1000 == 500 ) ttfits->SetAutoSave();
+
     // plot the result
     new_event_display( iev, hc, hcr, elfit );
 
@@ -208,8 +212,12 @@ void rich_analysis( char * infilename = "geant4ptf_000000.root", unsigned long l
   fout->Close();
   fin->Close();
   // cleanup
-  //delete truth_tree;
-  //delete ptf_tree;
+  if (fin!=nullptr) delete fin;
+  if (fout!=nullptr) delete fout;
+  if (truth!=nullptr) delete truth;
+  if (ptf!=nullptr) delete ptf;
+  //if (truth_tree!=nullptr) delete truth_tree;
+  //if (ptf_tree!=nullptr) delete ptf_tree;
 }
 
 

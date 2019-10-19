@@ -6,6 +6,10 @@ EllipseFitter::EllipseFitter() {
 
   // prepare root minimizer
   minalg = ROOT::Math::Factory::CreateMinimizer("Minuit2", "");
+  if (minalg==nullptr) {
+    std::cerr<<"Error making ROOT::Math::Factory"<<std::endl;
+    exit(0);
+  }
   minalg->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
   minalg->SetMaxIterations(10000);  // for GSL
   minalg->SetTolerance(0.001);
