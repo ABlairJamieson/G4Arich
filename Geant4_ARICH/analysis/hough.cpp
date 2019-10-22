@@ -74,6 +74,7 @@ CircleHough::~CircleHough(){
 
 
 const HoughResults& CircleHough::find_circles( const std::vector< xypoint >& data ){
+  ++nfind_circles;
   fresults.clear();
   std::vector< xypoint > unused_hits = data;
   bool done = false;
@@ -86,7 +87,7 @@ const HoughResults& CircleHough::find_circles( const std::vector< xypoint >& dat
       done = true;
     }
     fresults.push_back( hr );
-    //save_hough_histo( fresults.size(), fTransformed[ hr.rbin ] );
+    save_hough_histo( fresults.size(), fTransformed[ hr.rbin ] );
     //plot_candidate( fresults.size(), hr );
   }
 
@@ -172,10 +173,11 @@ HoughResult CircleHough::find_maximum( std::vector< xypoint >& hits ){
 }
 
 void CircleHough::save_hough_histo( unsigned num, TH2D* histo ){
+  if ( nfind_circles > 10 ) return;
   TDirectory* curdir = gDirectory;
   houghdir->cd();
 
-  std::string hname = std::string( histo->GetName() ) + "_cand_" + std::to_string( num );
+  std::string hname = std::string( "ev_" ) + std::to_string(nfind_circles) + "_cand_" + std::to_string( num ) + histo->GetName() ;
   TH2D* savehist = (TH2D*)histo->Clone( hname.c_str() );
   savehist->SetName( hname.c_str() );
   savehist->SetDirectory( houghdir );

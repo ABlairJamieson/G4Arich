@@ -115,6 +115,7 @@ class CircleHough {
   // Make a clone of one of hough transformed histograms for
   // a candidate circle.  Pass it the candidate number, and
   // histogram pointer
+  int nfind_circles{0};//call count for find_circles
   void save_hough_histo( unsigned num, TH2D* histo );
 
   // make a histogram of the candidate circle, and draw
