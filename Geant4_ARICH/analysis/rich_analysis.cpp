@@ -1,134 +1,158 @@
 
 #include <TTree.h>
-#include <TH2D.h>
-#include <TH1D.h>
 #include <TDirectory.h>
 #include <TFile.h>
-#include <TProfile.h>
-#include <TVector3.h>
-#include <TF1.h>
 #include <TGraph.h>
-#include <TCanvas.h>
-#include <TBox.h>
-#include "TEllipse.h"
+#include <TMatrixD.h>
+#include <TChain.h>
 
-#include <Math/Minimizer.h>
-#include <Math/Factory.h>
-#include <Math/Functor.h>
-
-#include <string>
 #include <vector>
 #include <iostream>
 #include <cstdio>
-#include <fstream>
 
 #include "TruthTTree.hh"
 #include "PTFTTree.hh"
+#include "RecEventReader.hh"
+
 #include "ellipse.h"
-#include "dbscan.h"
-#include "ringfitchi2.h"
 #include "hough.h"
 #include "ellipsefitter.h"
+#include "ringfitchi2.h"
+#include "eventdisplay.h"
 
 using std::vector;
-using std::string;
 using std::cout;
 using std::endl;
 
-
-// new event_display
-void new_event_display( const unsigned long long iev,
-			CircleHough & ch,
-			const HoughResults & hcr,
-			const EllipseFitter & el ){
-
-  /// only draw first 11 events
-  if (iev>12) return;
-  
-  TDirectory * curdir = gDirectory;
-  std::string dirname = std::string{"newdisplay_"}+std::to_string( iev );
-  TDirectory * evdir = curdir->mkdir( dirname.c_str() );
-  evdir->cd();
-  
-  const std::vector<int> colors = { kRed   , kBlue, kGreen,   kOrange,
-				    kViolet, kCyan, kMagenta, kPink+6 };   
-
-  // build histogram range from transformed histogram
-  std::vector< TH2D* > vcht = ch.get_transform();
-  if ( vcht.size() < 1 ) return;
-  unsigned nbins_x = vcht[0]->GetNbinsX();
-  unsigned nbins_y = vcht[0]->GetNbinsX();
-  double   xmin    = vcht[0]->GetXaxis()->GetXmin();
-  double   xmax    = vcht[0]->GetXaxis()->GetXmax();
-  double   ymin    = vcht[0]->GetYaxis()->GetXmin();
-  double   ymax    = vcht[0]->GetYaxis()->GetXmax();
-  // build histogram name
-  std::string hname = std::string{"evdisp_"} + std::to_string( iev );
-  TH2D* hist = new TH2D( hname.c_str(), " ; X (cm); Y (cm) ",
-			 nbins_x, xmin, xmax,
-			 nbins_y, ymin, ymax );
-
-  // put the histogram on a canvas
-  std::string canname = std::string{"tc_"} + hname;
-  TCanvas * tc = new TCanvas( canname.c_str(), canname.c_str() );
-  tc->cd();
-  hist->Draw();
-
-  // Now we will add each of the datapoints color coded for each ellipse
-  float xbwid = (xmax-xmin)/nbins_x;
-  float ybwid = (ymax-ymin)/nbins_y;
-  for ( unsigned iel = 0; iel < hcr.size(); ++iel ){
-    int curcol = 0;
-    if ( iel<colors.size() ) curcol = colors[iel];
-    if ( hcr[iel].type == HoughUnusedPoints ) curcol=kGray;
-    
-    // Add datapoints as boxes to the plot
-    for ( const xypoint & pt : hcr[iel].data ){
-      TBox *b =new TBox( pt.x-xbwid, pt.y-ybwid, pt.x+xbwid, pt.y+ybwid );
-      b->SetFillStyle(1001);
-      b->SetFillColor( curcol );
-      b->Draw();
-      b->SetBit( kCanDelete );
-      b->SetBit( kMustCleanup );
-    }
-    if ( hcr[iel].type == HoughUnusedPoints ) continue;
-    
-    // Draw circle from hough transform
-    TEllipse *tel= new TEllipse( hcr[iel].xyc.x, hcr[iel].xyc.y, hcr[iel].rc);
-    tel->SetFillStyle(0);
-    tel->SetLineColor( curcol );
-    tel->Draw();
-    hist->GetListOfFunctions()->Add( tel );
-    
-    // Draw ellipse
-    // First get the ellipse from the fit params
-    ellipse_st eans( el.b[iel], el.e[iel], el.phi[iel], xypoint( el.x[iel], el.y[iel] ) );
-    
-    // make graph for the best ellipse
-    vector<double> xpoints;
-    vector<double> ypoints;
-  
-    for (unsigned i=0; i<180; ++i ){
-      double theta = i*2*pi/180;
-      xypoint p = eans.xy( theta ); 
-      xpoints.push_back( p.x );
-      ypoints.push_back( p.y );
-    }
-    TGraph * g = new TGraph( xpoints.size(), &xpoints[0], &ypoints[0] );
-    // name the graph?
-    std::string gname = std::string{"gel_"}+hname;
-    g->SetName( gname.c_str() );
-    g->SetLineWidth(2); 
-    g->SetLineColor( curcol + 2 );
-    g->Draw("lsame");
-    hist->GetListOfFunctions()->Add( g );
+vector< TMatrixD > RecEventInvCovMat( const RecEvent & rev ){
+  std::cout<<"RecEvent eventID="<<rev.eventID<<std::endl;
+  vector < TMatrixD > invcovmats;
+  /// only need covariance in x,y,tx,ty
+  for ( unsigned i=0; i<rev.pid->size(); ++i ){
+    double cov[16] = { rev.covMat->at(i)[0],  rev.covMat->at(i)[1],  rev.covMat->at(i)[2],  rev.covMat->at(i)[3],  
+		       rev.covMat->at(i)[1],  rev.covMat->at(i)[4],  rev.covMat->at(i)[5],  rev.covMat->at(i)[6],
+		       rev.covMat->at(i)[2],  rev.covMat->at(i)[5],  rev.covMat->at(i)[7],  rev.covMat->at(i)[8],
+		       rev.covMat->at(i)[3],  rev.covMat->at(i)[7],  rev.covMat->at(i)[8],  rev.covMat->at(i)[9] };
+    TMatrixD covmat(4,4);
+    covmat.SetMatrixArray( cov );
+    TMatrixD invcovmat = covmat.InvertFast();
+    invcovmats.push_back( invcovmat );
   }
+  return invcovmats;
+}
 
-  tc->Write();
-  curdir->cd();
+/// CircleRecEventMatcher takes RecEvent data at finds which
+/// Hough circle goes with which RecEvent
+/// The matching is done based on smallest difference between circle centers.
+struct CircleRecEventMatcher {
+
+  CircleRecEventMatcher();
+
+  void match_circles( const RecEvent &rev, const HoughResults & hcr, const TruthTTree& truth );
+
+  /// getters don't check anything, so make sure your index is okay!
+  unsigned size() const { return matches.size(); }
+  unsigned get_rec_event_idx( unsigned houghidx ) const { return matches[ houghidx ]; }
+  double   get_match_distance( unsigned houghidx) const { return matchdist[ houghidx ]; }
+  
+private:
+  void   book_histograms();
+  TH2D * hnhough_vs_ntrue; // number of hough circles vs true tracks
+  TH2D * hnhough_vs_nrec;  // number of hough circles vs rec tracks
+  TH2D * hnrec_vs_ntrue;   // number of rec tracks vs true tracks
+  TH1D * hhoughdr;         // shortest distance between centers (hough vs rec)
+  TH1D * hhoughdr_true;    // shortest distance between centers (hough vs true)
+  TH1D * hrecdr_true;      // shortest distance between centers (rec   vs true)
+
+  std::vector< unsigned>  matches;         // index into RecEvents for each HoughCircle
+  std::vector< double >   matchdist;       // distance of closest match
+};
+
+void CircleRecEventMatcher::book_histograms() {
+  hnhough_vs_ntrue = new TH2D("hnhough_vs_ntrue", " Num Hough vs True ; N_{true}; N_{hough}",       10,-0.5,9.5,10,-0.5,9.5);
+  hnhough_vs_nrec  = new TH2D("hnhough_vs_nrec" , " Num Hough vs Recon Tracks ; N_{rec}; N_{hough}",10,-0.5,9.5,10,-0.5,9.5);
+  hnrec_vs_ntrue   = new TH2D("hnrec_vs_ntrue"  , " Num Rec vs True Tracks ; N_{true}; N_{rec}",    10,-0.5,9.5,10,-0.5,9.5);
+  hhoughdr         = new TH1D("hhoughdr"        , " ; | r_{hough} - r_{rec} | ; Counts / bin",  100, 0.,200.0 );
+  hhoughdr_true    = new TH1D("hhoughdr_true"   , " ; | r_{hough} - r_{true} | ; Counts / bin", 100, 0.,200.0 );
+  hrecdr_true      = new TH1D("hrecdr_true"     , " ; | r_{rec} - r_{true} | ; Counts / bin",   100, 0.,200.0 );
+}
+
+CircleRecEventMatcher::CircleRecEventMatcher() {
+  book_histograms();
 }
 
 
+void CircleRecEventMatcher::match_circles( const RecEvent &rev, const HoughResults & hcr, const TruthTTree& truth ){
+  matches.clear();
+  matchdist.clear();
+  
+  hnhough_vs_ntrue->Fill( truth.NTracks,    hcr.size() );
+  hnhough_vs_nrec ->Fill( rev.xRec->size(), hcr.size() );
+  hnrec_vs_ntrue  ->Fill( truth.NTracks,    rev.xRec->size() );
+  
+  for ( const HoughResult& hr : hcr ){
+    double mdist =9e99;
+    unsigned midx = 0;
+    // calculate (hough - rec)
+    for ( unsigned idx = 0; idx < rev.xRec->size(); ++idx ){
+      // propagate input track from aerogel to detector plane
+      double x = rev.xRec->at(idx) + 20.0 * rev.txRec->at(idx);  
+      double y = rev.yRec->at(idx) + 20.0 * rev.tyRec->at(idx);  
+      double dist = sqrt( ( x - hr.xyc.x ) * ( x - hr.xyc.x )  +
+			  ( y - hr.xyc.y ) * ( y - hr.xyc.y )  );
+      if ( dist < mdist ){
+	mdist = dist;
+	midx = idx;
+      }
+    }
+    matches.push_back( midx );
+    matchdist.push_back( mdist );
+    hhoughdr->Fill( mdist );
+
+
+    double mdist_true =9e99;
+    // calculate (hough - true)
+    for ( unsigned idx = 0; idx < truth.NTracks; ++idx ){
+      // propagate input track from aerogel to detector plane
+      double x = truth.VtxX[idx] + 20.0 * truth.Px[idx] / truth.Pz[idx];
+      double y = truth.VtxY[idx] + 20.0 * truth.Py[idx] / truth.Pz[idx];
+      double dist = sqrt( ( x - hr.xyc.x ) * ( x - hr.xyc.x )  +
+			  ( y - hr.xyc.y ) * ( y - hr.xyc.y )  );
+      if ( dist < mdist_true ){
+	mdist_true = dist;
+      }
+    }
+    hhoughdr_true->Fill( mdist_true );
+  }
+
+
+  // calculate (rec - true )
+  for ( unsigned idx = 0; idx < rev.xRec->size(); ++idx ){
+    double mdist_true =9e99;
+    // propagate input track from aerogel to detector plane
+    double x = rev.xRec->at(idx) + 20.0 * rev.txRec->at(idx);  
+    double y = rev.yRec->at(idx) + 20.0 * rev.tyRec->at(idx);
+    for ( unsigned jdx = 0; jdx < truth.NTracks; ++jdx ){
+	  // propagate input track from aerogel to detector plane
+      double xt = truth.VtxX[jdx] + 20.0 * truth.Px[jdx] / truth.Pz[jdx];
+      double yt = truth.VtxY[jdx] + 20.0 * truth.Py[jdx] / truth.Pz[jdx];
+      double dist = sqrt( ( x - xt ) * ( x - xt )  +
+			  ( y - yt ) * ( y - yt )  );
+      if ( dist < mdist_true ){
+	mdist_true = dist;
+      }
+    }
+    hrecdr_true->Fill( mdist_true );
+  }
+}
+
+ostream& operator<<( ostream& os, const CircleRecEventMatcher & crem ){
+  for ( unsigned i=0; i<crem.size(); ++i ){
+    os<<"Hough-circle: "<<i<<" rec track: "<<crem.get_rec_event_idx(i)<<" dist = "<<crem.get_match_distance(i)<<std::endl;
+  }
+  return os;
+
+}
 
 
 void rich_analysis( char * infilename = "geant4ptf_000000.root", unsigned long long nevmax =5 ){
@@ -137,12 +161,17 @@ void rich_analysis( char * infilename = "geant4ptf_000000.root", unsigned long l
   TFile * fin = new TFile( infilename, "read" );
 
   // Setup readin of TTrees from input file
-  TruthTTree * truth = new TruthTTree;
+  TruthTTree * truth = new TruthTTree;                   
   PTFTTree * ptf = new PTFTTree;
   TTree * truth_tree = (TTree*) fin->Get("truth_tree");
   TTree * ptf_tree = (TTree*) fin->Get("ptf_tree");
   truth->SetBranchAddresses( truth_tree );
   ptf->SetBranchAddresses( ptf_tree );
+
+  // Setup readin of TTree from input to input file
+  // It includes a fit to particle tracks from silicon strip detectors
+  RecEvent ssrecev;
+  TChain * sstruth = ReadListFile( "root_vector_files.txt", ssrecev );
 
   // Setup ouput file for ring fit results
   TFile * fout = new TFile( "rich_analysis.root", "recreate" );
@@ -157,6 +186,10 @@ void rich_analysis( char * infilename = "geant4ptf_000000.root", unsigned long l
   CircleHough hc;
   hc.set_distance_factor( 2.0 );
 
+
+  CircleRecEventMatcher crem;
+
+  
   // loop over events in input TTree
   unsigned long long nevents = ptf_tree->GetEntries();
   for (unsigned long long iev =0 ; iev < std::min( nevmax, nevents); ++iev ){
@@ -194,10 +227,21 @@ void rich_analysis( char * infilename = "geant4ptf_000000.root", unsigned long l
     }
 
     HoughResults hcr = hc.find_circles( pts );
-    //std::cout << hcr << std::endl;
 
+    /// Load entry for silicon strip detector and truth input
+    std::cout<<"ptf->root_eventid="<<ptf->root_eventid
+	     <<"ptf->root_idx="<<ptf->root_idx<<std::endl;
+    sstruth->GetEntry( ptf->root_idx ); 
+    /// Get inverse covariance matrices for this event
+    vector< TMatrixD > invcov = RecEventInvCovMat( ssrecev );
+
+    /// Match reconstructed tracks to hough circles
+    crem.match_circles( ssrecev, hcr, *truth );
+    
+    cout << crem ;
+    
     /// Fit all circles
-    elfit.fit_rings( hcr, ptf->true_idx );
+    elfit.fit_rings( hcr, ptf->root_eventid );
     /// Save results to TTree
     ttfits->Fill();
 

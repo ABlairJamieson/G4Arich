@@ -81,9 +81,11 @@ const HoughResults& CircleHough::find_circles( const std::vector< xypoint >& dat
   while ( unused_hits.size() > minhits && !done ){
     hough_transform( unused_hits );
     HoughResult hr = find_maximum( unused_hits );
-    if ( hr.peakval > threshold ) {
+    if ( hr.peakval > threshold && hr.data.size() > minhits) {
       hr.type = HoughCircle;
     } else {
+      hr.data.insert( hr.data.end(), unused_hits.begin(), unused_hits.end() );
+      hr.type = HoughUnusedPoints;
       done = true;
     }
     fresults.push_back( hr );

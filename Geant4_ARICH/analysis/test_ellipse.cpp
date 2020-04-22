@@ -34,7 +34,9 @@ void test_ellipse(){
     double x = gRandom->Rndm()*600.0 - 200.0;
     double y = gRandom->Rndm()*700.0 - 700.0;
       xypoint xymin;
-      double dmin2 = e1.dmin2(  xypoint(x,y), xymin );
+      //double dmin2 = e1.dmin2(  xypoint(x,y), xymin );
+      int kind=0;
+      double dmin2 = e1.DistancePointEllipse2(  xypoint(x,y), xymin, kind );
 
       TLine * tl = new TLine( x, y, xymin.x, xymin.y );
       TMarker* tm = new TMarker( x, y, 7 );
